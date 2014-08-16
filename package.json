@@ -1,0 +1,17 @@
+{
+  "name": "ns-upload",
+  "version": "0.0.0",
+  "description": "A file watcher that uploads files to NetSuite's file cabinet on change",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^0.4.0",
+    "gaze": "^0.6.4",
+    "mime": "^1.2.11",
+    "request": "^2.36.0"
+  }
+}
