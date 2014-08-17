@@ -6,26 +6,45 @@ var gaze = require('gaze')
 var request = require('request')
 var mime = require('mime')
 var m2NS = require('./lib/mimeToNSType')
-var config = require('./config')
+var Liftoff = require('liftoff')
+var argv = require('minimist')(process.argv.slice(2))
 var chalk = require('chalk')
 var error = chalk.bold.red
 
+var app = new Liftoff({
+    name: 'ns-upload',
+    configName: 'ns-upload'
+})
 
-gaze(config.watched, function(err, watcher) {
-    this.on('changed', function(fsPath) {
-        util.log('%s was changed', fsPath)
-        var re = /(.[^\/]*)\//g,
-            fileCabinetPath = fsPath.replace(__dirname + '/', ''),
-            folders = fileCabinetPath.match(re),
-            slash = fsPath.lastIndexOf('/'),
-            fileName = (!folders) ? fileCabinetPath : fsPath.substr(slash + 1),
-            type = mime.lookup(fileName)
+app.launch({ cwd: argv.cwd }, run)
 
-        fs.readFile(fsPath, 'utf8', function(err, content) {
-            if (err) util.error(error('ERROR: ', err))
+function run(env) {
+    if (!env.configPath) {
+        util.error(error('No configuration file found'))
+        process.exit(1)
+    }
 
-            var auth = config.auth,
-                options = {
+    var config = require(env.configPath)
+
+    gaze(config.watched, function(err, watcher) {
+        this.on('changed', getContents)
+
+        function getContents(path) {
+            var re = /(.[^\/]*)\//g,
+                fileCabinetPath = path.replace(process.cwd() + '/', ''),
+                folders = fileCabinetPath.match(re),
+                slash = path.lastIndexOf('/'),
+                fileName = (!folders) ? fileCabinetPath : path.substr(slash + 1),
+                type = mime.lookup(fileName),
+                auth = config.auth
+
+            util.log(chalk.cyan(util.format('%s was changed', fileName)))
+            fs.readFile(path, 'utf8', uploadFile)
+
+            function uploadFile(err, content) {
+                if (err) util.error(error('ERROR: ', err))
+                util.log(chalk.cyan(util.format('Uploading %s', fileName)))
+                request({
                     url: config.url,
                     method: 'put',
                     headers: {
@@ -37,24 +56,26 @@ gaze(config.watched, function(err, watcher) {
                     body: JSON.stringify({
                         fileName: fileName,
                         content: content,
-                        path: config.rootPath + (folders ? folders.join('') : '') + fileName,
+                        path: config.nsRootPath + (folders ? folders.join('') : '') + fileName,
                         fileType: m2NS(type)
                     })
-                }
+                }, parseNSResponse)
+            }
 
-
-            util.log('Uploading %s', fileName)
-            request(options, function(err, res, body) {
+            function parseNSResponse(err, res, body) {
                 body = JSON.parse(body)
                 if (body.error) {
-                    util.log('options', options)
+                    if (body.error.code === 'RCRD_DSNT_EXIST') {
+                        // Try to upload clean file.
+                    }
                     // error.code = SSS_MISSING_REQD_ARGUMENT - Missing a body value
                     //              RCRD_DSNT_EXIST - missing record in netsuite
                     util.error('Error Code:', body.error.code, 'Message:', body.error.message)
+                } else {
+                    util.log(chalk.green('File Uploaded Successfully'))
                 }
-
-                util.log('File Uploaded Successfully')
-            })
-        })
+            }
+        }
     })
-})
+}
+

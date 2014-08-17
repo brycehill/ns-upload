@@ -1,17 +1,28 @@
 {
   "name": "ns-upload",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A file watcher that uploads files to NetSuite's file cabinet on change",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Bryce Hill",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brycehill/ns-upload.git"
+  },
   "license": "ISC",
   "dependencies": {
     "chalk": "^0.4.0",
     "gaze": "^0.6.4",
+    "liftoff": "^0.12.0",
     "mime": "^1.2.11",
+    "minimist": "^1.1.0",
     "request": "^2.36.0"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/brycehill/ns-upload/issues"
+  },
+  "preferGlobal": "true",
+  "bin": "./index.js"
 }
