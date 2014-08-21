@@ -10,6 +10,8 @@ var Liftoff = require('liftoff')
 var argv = require('minimist')(process.argv.slice(2))
 var chalk = require('chalk')
 var error = chalk.bold.red
+var success = chalk.green
+var message = chalk.cyan
 
 var app = new Liftoff({
     name: 'ns-upload',
@@ -38,12 +40,12 @@ function run(env) {
                 type = mime.lookup(fileName),
                 auth = config.auth
 
-            util.log(chalk.cyan(util.format('%s was changed', fileName)))
+            util.log(message(util.format('%s was changed', fileName)))
             fs.readFile(path, 'utf8', uploadFile)
 
             function uploadFile(err, content) {
                 if (err) util.error(error('ERROR: ', err))
-                util.log(chalk.cyan(util.format('Uploading %s', fileName)))
+                util.log(message(util.format('Uploading %s', fileName)))
                 request({
                     url: config.url,
                     method: 'put',
@@ -70,9 +72,9 @@ function run(env) {
                     }
                     // error.code = SSS_MISSING_REQD_ARGUMENT - Missing a body value
                     //              RCRD_DSNT_EXIST - missing record in netsuite
-                    util.error('Error Code:', body.error.code, 'Message:', body.error.message)
+                    util.error(error('Error Code:', body.error.code, 'Message:', body.error.message))
                 } else {
-                    util.log(chalk.green('File Uploaded Successfully'))
+                    util.log(success('File Uploaded Successfully'))
                 }
             }
         }
