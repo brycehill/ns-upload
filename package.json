@@ -20,6 +20,12 @@
     "minimist": "^1.1.0",
     "request": "^2.36.0"
   },
+  "keywords": [
+    "NetSuite",
+    "upload",
+    "file watcher",
+    "file cabinet"
+  ],
   "bugs": {
     "url": "https://github.com/brycehill/ns-upload/issues"
   },
