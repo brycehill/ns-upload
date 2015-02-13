@@ -4,7 +4,7 @@
   "description": "A file watcher that uploads files to NetSuite's file cabinet on change",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified. Better write some tests someday.\" && exit 0"
   },
   "author": "Bryce Hill",
   "repository": {
