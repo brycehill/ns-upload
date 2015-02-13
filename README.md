@@ -27,7 +27,7 @@ Create a ```ns-upload.json``` file in the root of your project. That file will n
 ```
 
 ####url
-URL to a updateFile RESTlet in your NS instance. Someday, maybe we'll use SOAP, but for now this.
+URL to a updateFile RESTlet in your NS instance. ~~Someday, maybe we'll use SOAP, but for now this.~~ Never.
 ####nsRootPath
 Path to the directory within the file cabinet that your project lives.
 ####watched
