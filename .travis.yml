@@ -5,7 +5,7 @@ deploy:
   provider: npm
   email: bryceahill@gmail.com
   api_key:
-    secure: rXAvdHoxl4/6HUEyHmQR2Vtx0JWmytYO4SB1QQbh3CVkEqEWOKhM6nlTmOeaAqaU4/CNej/DdYGmBSRJH5dIVnqEOOivGr93XFuQkjmOFqEoYTMgarWNVUUGXIbS59ecAQSPUJJ8vIGND5g0LgC69NB84xtdBUe7Vm82O1vghpQ=
+    secure: GKn2nb+76c+dY0kq/e6q4wD8ZCzgMXldRNLeSKfopW3z1yfm1l/alBcbe0QBDbxat/e1KCweqUY6EiZv8e5WrvhXu7Twem+qkY3/MEA+rtiGIQb3idz4NzABxH1dJ1ku84Yit1QWk4sRAxv2yC6M/bp8/As67NaRcEhGKNlZZXc=
   on:
     tags: true
     repo: brycehill/ns-upload
