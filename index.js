@@ -65,16 +65,21 @@ function run(env) {
             }
 
             function parseNSResponse(err, res, body) {
-                body = JSON.parse(body)
-                if (body.error) {
-                    if (body.error.code === 'RCRD_DSNT_EXIST') {
-                        // Try to upload clean file.
+                try {
+                    body = JSON.parse(body)
+                    if (body.error) {
+                        if (body.error.code === 'RCRD_DSNT_EXIST') {
+                            // Try to upload clean file?
+                        }
+                        /* Potential error codes:
+                           SSS_MISSING_REQD_ARGUMENT - Missing a body value
+                           RCRD_DSNT_EXIST - missing record in netsuite */
+                        util.error(error('Error Code:', body.error.code, '\nMessage:', body.error.message))
+                    } else {
+                        util.log(success('File ' + fileName + ' Uploaded Successfully'))
                     }
-                    // error.code = SSS_MISSING_REQD_ARGUMENT - Missing a body value
-                    //              RCRD_DSNT_EXIST - missing record in netsuite
-                    util.error(error('Error Code:', body.error.code, 'Message:', body.error.message))
-                } else {
-                    util.log(success('File Uploaded Successfully'))
+                } catch(e) {
+                    util.error(error('Exception caught.', e.message))
                 }
             }
         }
