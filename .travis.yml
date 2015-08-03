@@ -5,7 +5,7 @@ deploy:
   provider: npm
   email: bryceahill@gmail.com
   api_key:
-    secure: AKMEQN+oUnTivqEi/TTlf69ygwqNPPbYjY5Ph6ZiSs28imNBF+TS4RdJJ0npCjh1Zfe2/jWc8yVBxa8dxb5XZLIY9Zwq1msOnZPXq2CWIL0RxcGqtrLrpf5++MHDUxKvkl3tFl8mcjsMn7/GC2WrkvvjMYkJV6xr5Gk2p4vGZPE=
+    secure: ShtjZWRMsjHy3LvsNHwdM0QFGm0Dm220LIe8I8j+NQSeBa7DRLq1uecT8jSl+Ihy35PJhYEUxvuB5Y164TE1fJX7GyLZdLurIBm/kuA7KWdg217slJxvUKv2j/JZIc1LEDpcsqkF1zEioGl5KGKFwwAjpOY8FcUWgPQSlJupg+I=
   on:
     tags: true
     all_branches: true
