@@ -1,6 +1,6 @@
 {
   "name": "ns-upload",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A file watcher that uploads files to NetSuite's file cabinet on change",
   "main": "index.js",
   "scripts": {
