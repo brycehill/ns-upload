@@ -8,6 +8,7 @@ function updateFile(data){
         updatedFile = nlapiCreateFile(data.fileName, data.fileType, data.content)
 
     updatedFile.setFolder(oldFile.getFolder())
+    updatedFile.setIsOnline(oldFile.isOnline())
 
     if (updatedFile && nlapiSubmitFile(updatedFile)) ret.success = true
 
