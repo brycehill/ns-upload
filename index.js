@@ -2,7 +2,7 @@
 
 var fs = require('fs')
 var util = require('util')
-var gaze = require('gaze')
+var chokidar = require('chokidar')
 var request = require('request')
 var mime = require('mime')
 var m2NS = require('./lib/mimeToNSType')
@@ -28,17 +28,14 @@ function run(env) {
 
     var config = require(env.configPath)
 
-    gaze(config.watched, function(err, watcher) {
-        this.on('changed', getContents)
-
-        function getContents(path) {
-            var re = /(.[^\/]*)\//g,
-                fileCabinetPath = path.replace(process.cwd() + '/', ''),
-                folders = fileCabinetPath.match(re),
-                slash = path.lastIndexOf('/'),
-                fileName = (!folders) ? fileCabinetPath : path.substr(slash + 1),
-                type = mime.lookup(fileName),
-                auth = config.auth
+    chokidar.watch(config.watched).on('change', function getContents(path) {
+        var re = /(.[^\/]*)\//g,
+            fileCabinetPath = path.replace(process.cwd() + '/', ''),
+            folders = fileCabinetPath.match(re),
+            slash = path.lastIndexOf('/'),
+            fileName = (!folders) ? fileCabinetPath : path.substr(slash + 1),
+            type = mime.lookup(fileName),
+            auth = config.auth
 
             util.log(message(util.format('%s was changed', fileName)))
             fs.readFile(path, 'utf8', uploadFile)
@@ -72,8 +69,8 @@ function run(env) {
                             // Try to upload clean file?
                         }
                         /* Potential error codes:
-                           SSS_MISSING_REQD_ARGUMENT - Missing a body value
-                           RCRD_DSNT_EXIST - missing record in netsuite */
+                        SSS_MISSING_REQD_ARGUMENT - Missing a body value
+                        RCRD_DSNT_EXIST - missing record in netsuite */
                         util.error(error('Error Code:', body.error.code, '\nMessage:', body.error.message))
                     } else {
                         util.log(success('File ' + fileName + ' Uploaded Successfully'))
@@ -83,6 +80,5 @@ function run(env) {
                 }
             }
         }
-    })
+    )   
 }
-
