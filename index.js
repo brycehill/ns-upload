@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
+var P = require("bluebird")
+var fs = P.promisifyAll(require('fs'))
+var request = P.promisifyAll(require('request'))
 var util = require('util')
 var chokidar = require('chokidar')
-var request = require('request')
+var compose = require('ramda').compose
 var mime = require('mime')
 var m2NS = require('./lib/mimeToNSType')
 var Liftoff = require('liftoff')
@@ -12,73 +14,95 @@ var chalk = require('chalk')
 var error = chalk.bold.red
 var success = chalk.green
 var message = chalk.cyan
+var config = {}
 
 var app = new Liftoff({
   name: 'ns-upload',
   configName: 'ns-upload'
 })
 
-app.launch({ cwd: argv.cwd }, run)
-
-function run(env) {
+app.launch({ cwd: argv.cwd }, function run(env) {
   if (!env.configPath) {
     util.error(error('No configuration file found'))
     process.exit(1)
   }
 
-  var config = require(env.configPath)
+  // @todo Make this not global?
+  config = require(env.configPath)
+  var watcher = chokidar.watch(config.watched)
+  watcher.on('change', compose(checkFile, parsePath))
+})
 
-  chokidar.watch(config.watched).on('change', function getContents(path) {
-    var re = /(.[^\/]*)\//g,
-      fileCabinetPath = path.replace(process.cwd() + '/', ''),
-      folders = fileCabinetPath.match(re),
-      slash = path.lastIndexOf('/'),
-      fileName = (!folders) ? fileCabinetPath : path.substr(slash + 1),
-      type = mime.lookup(fileName),
-      auth = config.auth
+// String -> File Descriptor {}
+function parsePath(path) {
+  var re = /(.[^\/]*)\//g
+  var fileCabinetPath = path.replace(process.cwd() + '/', '')
+  var folders = fileCabinetPath.match(re)
+  var slash = path.lastIndexOf('/')
+  return {
+    path,
+    folders,
+    fileName: !folders ? fileCabinetPath : path.substr(slash + 1)
+  }
+}
 
-      util.log(message(util.format('%s was changed', fileName)))
-      fs.readFile(path, 'utf8', uploadFile)
+// File Descriptor {} -> Promise
+function checkFile(fd) {
+  util.log(message(`${fd.filename} was changed`))
+  return fs.readFileAsync(fd.path, 'utf8')
+    .then(uploadFile(fd))
+    .then(parseNSResponse)
+    .catch( (err) => {
+      util.error(error(err))
+    })
+  }
+)
 
-      function uploadFile(err, content) {
-        if (err) util.error(error('ERROR: ', err))
-        util.log(message(util.format('Uploading %s', fileName)))
-        request({
-          url: config.url,
-          method: 'put',
-          headers: {
-            'User-Agent-x': 'SuiteScript-Call',
-            'Content-Type': 'application/json',
-            'Content-Language': 'en-US',
-            'Authorization': 'NLAuth nlauth_account='+auth.account+', nlauth_email='+auth.email+', nlauth_signature='+auth.pass+', nlauth_role='+auth.role
-          },
-          body: JSON.stringify({
-            fileName: fileName,
-            content: content,
-            path: config.nsRootPath + (folders ? folders.join('') : '') + fileName,
-            fileType: m2NS(type)
-          })
-        }, parseNSResponse)
-      }
+// File Descripitor {} -> String -> Promise
+function uploadFile(fd) {
+  var mimeType = mime.lookup(fd.fileName)
+  return function(content) {
+    // Someday...
+    // var { account, email, pass, role } = config.auth
+    var auth = config.auth
+    util.log(message(`Uploading ${fd.fileName}`))
+    return request.putAsync({
+      url: config.url,
+      headers: {
+        'User-Agent-x': 'SuiteScript-Call',
+        'Content-Type': 'application/json',
+        'Content-Language': 'en-US',
+        'Authorization': `NLAuth nlauth_account=${auth.account}, nlauth_email=${auth.email},
+          nlauth_signature=${auth.pass}, nlauth_role=${auth.role}`
+      },
+      body: JSON.stringify({
+        fileName: fileName,
+        content: content,
+        path: config.nsRootPath + (fd.folders ? fd.folders.join('') : '') + fd.fileName,
+        fileType: m2NS(mimeType)
+      })
+    })
+  }
+}
 
-      function parseNSResponse(err, res, body) {
-        try {
-          body = JSON.parse(body)
-          if (body.error) {
-            if (body.error.code === 'RCRD_DSNT_EXIST') {
-                // Try to upload clean file?
-            }
-            /* Potential error codes:
-            SSS_MISSING_REQD_ARGUMENT - Missing a body value
-            RCRD_DSNT_EXIST - missing record in netsuite */
-            util.error(error('Error Code:', body.error.code, '\nMessage:', body.error.message))
-          } else {
-            util.log(success('File ' + fileName + ' Uploaded Successfully'))
-          }
-        } catch(e) {
-          util.error(error('Exception caught.', e.message))
-        }
-      }
+function parseNSResponse(res) {
+  var body = JSON.parse(res.body)
+  if (body.error) {
+    if (body.error.code === 'RCRD_DSNT_EXIST') {
+        // Try to upload clean file?
     }
-  )
+    /* Potential error codes:
+    SSS_MISSING_REQD_ARGUMENT - Missing a body value
+    RCRD_DSNT_EXIST - missing record in netsuite */
+    util.error(error(`Error Code: ${body.error.code},
+      Message: ${body.error.message}`))
+  } else {
+    util.log(success(`${fileName} Uploaded Successfully`))
+  }
+}
+
+module.exports = {
+  run,
+  parseNSResponse,
+  uploadFile
 }
