@@ -21,17 +21,17 @@ var app = new Liftoff({
   configName: 'ns-upload'
 })
 
-app.launch({ cwd: argv.cwd }, function run(env) {
+app.launch({ cwd: argv.cwd }, run)
+
+function run(env) {
   if (!env.configPath) {
-    util.error(error('No configuration file found'))
+    console.error(error('No configuration file found'))
     process.exit(1)
   }
-
-  // @todo Make this not global?
   config = require(env.configPath)
   var watcher = chokidar.watch(config.watched)
   watcher.on('change', compose(checkFile, parsePath))
-})
+}
 
 // String -> File Descriptor {}
 function parsePath(path) {
@@ -48,15 +48,12 @@ function parsePath(path) {
 
 // File Descriptor {} -> Promise
 function checkFile(fd) {
-  util.log(message(`${fd.filename} was changed`))
+  console.log(message(`${fd.fileName} was changed`))
   return fs.readFileAsync(fd.path, 'utf8')
     .then(uploadFile(fd))
     .then(parseNSResponse)
-    .catch( (err) => {
-      util.error(error(err))
-    })
-  }
-)
+    .catch(compose(console.error, error))
+}
 
 // File Descripitor {} -> String -> Promise
 function uploadFile(fd) {
@@ -65,7 +62,7 @@ function uploadFile(fd) {
     // Someday...
     // var { account, email, pass, role } = config.auth
     var auth = config.auth
-    util.log(message(`Uploading ${fd.fileName}`))
+    console.log(message(`Uploading ${fd.fileName}`))
     return request.putAsync({
       url: config.url,
       headers: {
@@ -76,8 +73,8 @@ function uploadFile(fd) {
           nlauth_signature=${auth.pass}, nlauth_role=${auth.role}`
       },
       body: JSON.stringify({
-        fileName: fileName,
-        content: content,
+        content,
+        fileName: fd.fileName,
         path: config.nsRootPath + (fd.folders ? fd.folders.join('') : '') + fd.fileName,
         fileType: m2NS(mimeType)
       })
@@ -94,10 +91,10 @@ function parseNSResponse(res) {
     /* Potential error codes:
     SSS_MISSING_REQD_ARGUMENT - Missing a body value
     RCRD_DSNT_EXIST - missing record in netsuite */
-    util.error(error(`Error Code: ${body.error.code},
+    console.error(error(`Error Code: ${body.error.code},
       Message: ${body.error.message}`))
   } else {
-    util.log(success(`${fileName} Uploaded Successfully`))
+    console.log(success(`${fileName} Uploaded Successfully`))
   }
 }
 
