@@ -83,6 +83,7 @@ function uploadFile(fd) {
 
 function parseNSResponse(res) {
   var body = JSON.parse(res.body)
+  var reqBody = JSON.parse(res.request.body)
   if (body.error) {
     if (body.error.code === 'RCRD_DSNT_EXIST') {
         // Try to upload clean file?
@@ -92,7 +93,7 @@ function parseNSResponse(res) {
     RCRD_DSNT_EXIST - missing record in netsuite */
     console.error(error(`Error Code: ${body.error.code}, Message: ${body.error.message}`))
   } else {
-    console.log(success(`${fileName} Uploaded Successfully`))
+    console.log(success(`${reqBody.fileName} Uploaded Successfully`))
   }
 }
 
