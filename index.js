@@ -69,8 +69,7 @@ function uploadFile(fd) {
         'User-Agent-x': 'SuiteScript-Call',
         'Content-Type': 'application/json',
         'Content-Language': 'en-US',
-        'Authorization': `NLAuth nlauth_account=${auth.account}, nlauth_email=${auth.email},
-          nlauth_signature=${auth.pass}, nlauth_role=${auth.role}`
+        'Authorization': `NLAuth nlauth_account=${auth.account}, nlauth_email=${auth.email}, nlauth_signature=${auth.pass}, nlauth_role=${auth.role}`
       },
       body: JSON.stringify({
         content,
@@ -91,8 +90,7 @@ function parseNSResponse(res) {
     /* Potential error codes:
     SSS_MISSING_REQD_ARGUMENT - Missing a body value
     RCRD_DSNT_EXIST - missing record in netsuite */
-    console.error(error(`Error Code: ${body.error.code},
-      Message: ${body.error.message}`))
+    console.error(error(`Error Code: ${body.error.code}, Message: ${body.error.message}`))
   } else {
     console.log(success(`${fileName} Uploaded Successfully`))
   }
